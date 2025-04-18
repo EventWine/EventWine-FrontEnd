@@ -1,9 +1,12 @@
 <script>
-
-import InventoryCreateAndEdit from '../components/inventory-create-and-edit.vue';
-import InventoryProcessApiService from "../services/inventory-process-api.service.js";
 import HeaderContent from "../../../public/component/header-content.component.vue";
+import InventoryCreateAndEdit from "../components/inventory-create-and-edit.vue";
+import {InventoryProcessApiService} from "../services/inventory-process-api.service.js";
+import {InventoryItem} from "../model/inventory.entity.js";
+import {FilterMatchMode} from "@primevue/core";
+
 export default {
+  name: "InventoryManagement",
   components: {
     HeaderContent,
     InventoryCreateAndEdit,
@@ -11,224 +14,185 @@ export default {
   data() {
     return {
       inventoryList: [],
-      filteredInventoryList: [],
-      selectedType: '',
-      selectedUnit: '',
-      selectedItems: [],
+      selectedItem: null,
+      inventoryService: null,
       dialogVisible: false,
-      currentItem: null,
-      isEditMode: false,
+      isEdit: false,
+      globalFilterValue: '',
+      filters: {
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+        type: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+        unit: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+      },
+      loading: false,
     };
   },
+  //#region Lifecycle Hooks
   created() {
+    this.inventoryService = new InventoryProcessApiService();
     this.fetchInventory();
   },
+  //#endregion
   methods: {
+    //#region Methods
     async fetchInventory() {
+      this.loading = true;
       try {
-        const items = await InventoryProcessApiService.getAllResources();
-        this.inventoryList = items;
-        this.filteredInventoryList = items;
+        this.inventoryList = await this.inventoryService.getAll();
       } catch (error) {
         console.error("Error fetching inventory:", error);
+      } finally {
+        this.loading = false;
       }
     },
 
-    viewDetails(id) {
-      this.$router.push({ name: 'InventoryDetail', params: { id } });
-    },
-
-    applyFilter() {
-      this.filteredInventoryList = this.inventoryList.filter(item => {
-        const matchesType = this.selectedType ? item.type === this.selectedType : true;
-        const matchesUnit = this.selectedUnit ? item.unit === this.selectedUnit : true;
-
-        const matchesName = this.searchName.length >= 3
-            ? item.name.toLowerCase().includes(this.searchName.toLowerCase())
-            : true;
-
-        return matchesType && matchesUnit && matchesName;
-      });
-    },
-
-    openCreateDialog() {
-      this.currentItem = {};
-      this.isEditMode = false;
+    showDetails(item) {
+      this.selectedItem = new InventoryItem(item);
+      this.isEdit = true;
       this.dialogVisible = true;
     },
 
-    editItem(item) {
-      this.currentItem = { ...item };
-      this.isEditMode = true;
+    openNewItemDialog() {
+      this.selectedItem = new InventoryItem({});
+      this.isEdit = false;
       this.dialogVisible = true;
     },
 
-    confirmDeleteItem(item) {
+    async deleteItem(item) {
       if (confirm(`Are you sure you want to delete ${item.name}?`)) {
-        console.log("Deleting item with ID:", item.id);
-        this.deleteItem(item.id)
+        try {
+          await this.inventoryService.delete(item.id);
+          await this.fetchInventory();
+        } catch (error) {
+          console.error("Error deleting item:", error);
+        }
       }
     },
 
-    async deleteItem(id) {
-      try {
-        await InventoryProcessApiService.delete(id);
-        await this.fetchInventory();
-      } catch (error) {
-        console.error("Error deleting item:", error);
-      }
+    viewItemDetails(item) {
+      this.$router.push({ name: 'InventoryDetails', params: { id: item.id } });
     },
 
-    closeDialog() {
+    onGlobalFilterChange(e) {
+      this.filters['global'].value = e.target.value;
+    },
+
+    clearFilter() {
+      this.initFilters();
+    },
+
+    initFilters() {
+      this.filters = {
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+        type: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+        unit: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+      };
+      this.globalFilterValue = '';
+    },
+
+    async onItemSaved() {
+      await this.fetchInventory();
       this.dialogVisible = false;
-    }
+    },
+
+    async onItemCreated(newItem) {
+      await this.fetchInventory();
+      this.dialogVisible = false;
+    },
+    //#endregion
   }
-}
+};
 </script>
 
 <template>
-
   <header-content></header-content>
-
-
   <div class="inventory-management">
-    <h1>Inventory Management</h1>
+    <pv-card class="mb-4">
+      <template #title>
+        <h1 class="text-3xl font-bold">Inventory Management</h1>
+      </template>
+      <template #content>
+        <div class="card">
+          <pv-toolbar class="mb-4">
+            <template #start>
+              <div class="p-input-icon-left">
+                <i class="pi pi-search" />
+                <pv-input-text v-model="globalFilterValue" placeholder="Search inventory" @input="onGlobalFilterChange" />
+              </div>
+            </template>
+            <template #end>
+              <pv-button label="Add New Item" icon="pi pi-plus" @click="openNewItemDialog" class="p-button-success" />
+            </template>
+          </pv-toolbar>
 
-    <div class="filter-container">
+          <pv-data-table
+              :value="inventoryList"
+              :paginator="true"
+              :rows="10"
+              :rows-per-page-options="[5, 10, 15]"
+              current-page-report-template="Showing {first} to {last} of {totalRecords} items"
+              :filters="filters"
+              :global-filter-fields="['name', 'type', 'unit']"
+              :loading="loading"
+          >
+            <pv-column field="name" header="Name" :sortable="true" :filter-field="'name'">
+              <template #filter="{ filterModel }">
+                <pv-input-text v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search by name" />
+              </template>
+            </pv-column>
+            <pv-column field="type" header="Type" :sortable="true" :filter-field="'type'">
+              <template #filter="{ filterModel }">
+                <pv-input-text v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search by type" />
+              </template>
+            </pv-column>
+            <pv-column field="unit" header="Unit" :sortable="true" :filter-field="'unit'">
+              <template #filter="{ filterModel }">
+                <pv-input-text v-model="filterModel.value" type="text" class="p-column-filter" placeholder="Search by unit" />
+              </template>
+            </pv-column>
 
-      <div class="filter-item">
-        <label for="nameFilter">Search by Name:</label>
-        <input type="text" id="nameFilter" v-model="searchName" @input="applyFilter" placeholder="Enter item name (min 3 characters)" />
-      </div>
-      <div class="filter-item">
-        <label for="typeFilter">Filter by Type:</label>
-        <select v-model="selectedType" @change="applyFilter" id="typeFilter">
-          <option value="">All</option>
-          <option value="Raw Material">Raw Material</option>
-          <option value="Equipment">Equipment</option>
-          <option value="Consumable">Consumable</option>
-        </select>
-      </div>
+            <pv-column headerStyle="width: 12rem">
+              <template #body="{ data }">
+                <pv-button icon="pi pi-eye" class="p-button-rounded p-button-info mr-2" @click="viewItemDetails(data)" />
+                <pv-button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" @click="showDetails(data)" />
+                <pv-button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="deleteItem(data)" />
+              </template>
+            </pv-column>
+          </pv-data-table>
+        </div>
 
-      <div class="filter-item">
-        <label for="unitFilter">Filter by Unit:</label>
-        <select v-model="selectedUnit" @change="applyFilter" id="unitFilter">
-          <option value="">All</option>
-          <option value="kg">kg</option>
-          <option value="units">units</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="table-container">
-      <pv-data-table
-          v-model:selection="selectedItems"
-          :value="filteredInventoryList"
-          :paginator="true"
-          :rows="10"
-          :rows-per-page-options="[5, 10, 15]"
-          current-page-report-template="Showing {first} to {last} of {totalRecords} items">
-
-        <pv-column field="name" header="Name" />
-        <pv-column field="quantity" header="Quantity" />
-        <pv-column field="unit" header="Unit" />
-        <pv-column field="supplier" header="Supplier" />
-        <pv-column field="costPerUnit" header="Cost Per Unit" />
-        <pv-column field="expiration" header="Expiration Date" />
-        <pv-column field="lastUpdated" header="Last Updated" />
-        <pv-column field="type" header="Type" />
-
-        <pv-column headerStyle="width: 8rem">
-          <template #body="{data}">
-            <pv-button icon="pi pi-pencil" @click="editItem(data)" />
-            <pv-button icon="pi pi-trash" @click="confirmDeleteItem(data)" severity="danger" />
-            <pv-button
-                icon="pi pi-info-circle"
-                label="View Details"
-                @click="viewDetails(data.id)"
-                class="view-details-button" />
-          </template>
-        </pv-column>
-      </pv-data-table>
-    </div>
-
-    <!-- Centered Add New Button -->
-    <div class="add-new-button-container">
-      <pv-button icon="pi pi-plus" label="Add New" severity="success" @click="openCreateDialog" />
-    </div>
-
-    <!-- Dialog for create and edit -->
-    <inventory-create-and-edit
-        v-model:visible="dialogVisible"
-        :entity="currentItem"
-        :edit="isEditMode"
-        @saved="fetchInventory"
-        @canceled="closeDialog"
-    />
+        <InventoryCreateAndEdit
+            v-model:visible="dialogVisible"
+            :entity="selectedItem"
+            :edit="selectedItem && selectedItem.id"
+            @canceled="dialogVisible = false"
+            @saved="onItemSaved"
+            @item-created="onItemCreated"
+        />
+      </template>
+    </pv-card>
   </div>
 </template>
 
 <style scoped>
 .inventory-management {
   padding: 20px;
-  font-family: Arial, sans-serif;
 }
 
-.filter-container {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
+.card {
+  background: var(--surface-card);
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
 }
 
-.filter-item {
-  display: flex;
-  flex-direction: column;
-  width: 300px;
+.mb-4 {
+  margin-bottom: 1rem;
 }
 
-.filter-item label {
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.filter-item input,
-.filter-item select {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  transition: border-color 0.3s;
-}
-
-.filter-item input:focus,
-.filter-item select:focus {
-  border-color: #007bff;
-}
-
-.table-container {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.add-new-button-container {
-  text-align: center;
-  margin: 20px 0;
-}
-
-.pv-button {
-  margin-right: 10px;
-}
-.view-details-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.3em 0.8em;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  margin-top: 10px;
-}
-
-.view-details-button:hover {
-  background-color: #0056b3;
+:deep(.p-column-filter) {
+  width: 100%;
 }
 </style>

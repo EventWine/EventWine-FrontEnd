@@ -29,7 +29,7 @@ export default {
 
 
       <template #start>
-        <img src="../../assets/img/logo-elixir-control.png" max-height="55" height="55"/>
+        <img src="../../assets/img/logo-elixir-control.jpg" max-height="55" height="55"/>
       </template>
 
       <template #end>

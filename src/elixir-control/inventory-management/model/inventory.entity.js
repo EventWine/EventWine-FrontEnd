@@ -1,15 +1,15 @@
 export class InventoryItem {
-    constructor(
-        id,
-        name,
-        quantity,
-        unit,
-        supplier,
-        costPerUnit,
-        expiration,
-        lastUpdated,
-        type
-    ) {
+    constructor({
+                    id = 0,
+                    name = '',
+                    quantity = 0,
+                    unit = '',
+                    supplier = '',
+                    costPerUnit = 0,
+                    expiration = '',
+                    lastUpdated = '',
+                    type = ''
+                } = {}) {
         this.id = id;
         this.name = name;
         this.quantity = quantity;

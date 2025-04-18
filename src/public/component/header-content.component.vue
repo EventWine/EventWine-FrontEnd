@@ -1,10 +1,12 @@
 <script>
 import LanguageSwitcher from "./language-switcher.component.vue";
+import { useAuthenticationStore} from "../../iam/services/authentication.store.js";
+import { useRouter } from "vue-router";
 
 export default {
   name: "header-content",
 
-  components: { LanguageSwitcher},
+  components: { LanguageSwitcher },
 
   title: 'Elixir Control',
 
@@ -13,13 +15,9 @@ export default {
       drawer: true,
       visible: false,
       items: [
-        { label: "title-home-option", to: "/vinicultor/home",               icon: 'pi pi-home' },
-        { label: "title-inventory-option", to: "/vinicultor/inventory",          icon: 'pi pi-receipt' },
-        { label: "title-winemaking-option", to: '/vinicultor/winemaking-process', icon: 'pi pi-spinner-dotted' },
-        { label: "title-my-clients-option", to: '/vinicultor/clients',            icon: 'pi pi-user' },
-        { label: "title-my-orders-option", to: '/vinicultor/orders/history',     icon: 'pi pi-list-check' },
-        { label: "title-my-products-option", to: '/vinicultor/products',           icon: 'pi pi-tags' },
-        { label: "title-support-option", to: '/vinicultor/Support',            icon: 'pi pi-wrench' },
+        { label: "title-home-option", to: "/vinicultor/home", icon: 'pi pi-home' },
+        { label: "title-inventory-option", to: "/vinicultor/inventory", icon: 'pi pi-receipt' },
+        { label: "title-winemaking-option", to: '/vinicultor/winemaking-process/batches', icon: 'pi pi-spinner-dotted' },
       ]
     }
   },
@@ -27,22 +25,24 @@ export default {
   methods: {
     closeDrawer() {
       this.visible = false;
+    },
+    cerrarSesion() {
+      const authenticationStore = useAuthenticationStore();
+      authenticationStore.signOut(this.$router); // ← solución: usar this.$router
     }
   },
+
+
   created() {
     console.log('HeaderContent created');
   }
-
 }
 </script>
 
 <template>
-
   <div class="header-content">
-
     <div class="toolbar-container z-auto">
       <pv-toolbar :items="items" class="w-full fixed top-0 left-0 pr-6 pl-6" style="background-color:#8B0000; max-height:80px; width:100%; height:100%">
-
         <template #start>
           <button @click="visible = !visible">
             <i class="pi pi-bars"></i>
@@ -50,34 +50,37 @@ export default {
         </template>
 
         <template #center>
-          <img src="../../assets/img/logo-elixir-control.png" max-height="55" height="55"/>
+          <img src="../../assets/img/logo-elixir-control.jpg" max-height="55" height="55"/>
         </template>
 
         <template #end>
           <language-switcher></language-switcher>
         </template>
-
       </pv-toolbar>
     </div>
 
     <div class="drawer-container">
       <pv-drawer :visible="visible" :showCloseIcon="false" style="background-color: #8B0000">
-
         <template #header>
           <span></span>
-          <pv-button @click="visible = false" class="button-close m-1" >
+          <pv-button @click="visible = false" class="button-close m-1">
             <i class="pi pi-times"></i>
           </pv-button>
         </template>
 
-
         <div class="options">
           <router-link v-for="item in items" :key="item.label" :to="item.to">
-            <pv-button @click="visible = false" class="button-option m-1" >
+            <pv-button @click="visible = false" class="button-option m-1">
               <i :class="item.icon"></i>
               {{ $t(item.label) }}
             </pv-button>
           </router-link>
+
+          <!-- Botón de cerrar sesión -->
+          <pv-button @click="cerrarSesion" class="button-option m-1 p-button-danger">
+            <i class="pi pi-sign-out"></i>
+            {{ $t('Cerrar sesión') }}
+          </pv-button>
         </div>
 
         <template #footer>
@@ -90,14 +93,9 @@ export default {
   <div style="margin-top:80px">
     <router-view style="margin-top:80px"></router-view>
   </div>
-
 </template>
 
-
-
-
 <style scoped>
-
 .button-close {
   background-color: #8B0000;
   color: white;
@@ -117,8 +115,7 @@ export default {
   font-weight: bold;
 }
 
-
-.options{
+.options {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -135,7 +132,6 @@ export default {
   align-items: start;
   justify-content: start;
   border-bottom: solid 1px #F5F5DC;
-
 }
 
 .options .button-option:not(:disabled):hover {
@@ -144,6 +140,4 @@ export default {
   color: black;
   font-weight: bold;
 }
-
-
 </style>

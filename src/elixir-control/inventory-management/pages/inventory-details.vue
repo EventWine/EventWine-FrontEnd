@@ -1,30 +1,41 @@
 <script>
+import { InventoryProcessApiService } from "../services/inventory-process-api.service.js";
 import HeaderContent from "../../../public/component/header-content.component.vue";
 
 export default {
-  components: {HeaderContent},
+  name: 'InventoryDetails',
+  components: { HeaderContent },
+  props: {
+    id: {
+      type: [String, Number],
+      required: true,
+    },
+  },
   data() {
     return {
       item: null,
+      loading: true,
+      error: false,
+      service: new InventoryProcessApiService(),
     };
   },
   created() {
-    const id = this.$route.params.id;
-    this.fetchItemDetails(id);
+    this.fetchItem();
   },
   methods: {
-    async fetchItemDetails(id) {
-      const response = await fetch(`https://my-json-server.typicode.com/SV51-MetaSoft-App-Web/endpoint-inventory-management/inventoryList/${id}`);
-      this.item = await response.json();
-    },
-    formatDate(dateString) {
-      if (!dateString) return 'N/A';
-      const date = new Date(dateString);
-      const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-      return date.toLocaleDateString(undefined, options);
+    async fetchItem() {
+      try {
+        const response = await this.service.getById(this.id);
+        this.item = response.data;
+      } catch (error) {
+        console.error("Error loading inventory item:", error);
+        this.error = true;
+      } finally {
+        this.loading = false;
+      }
     },
     goBack() {
-      this.$router.go(-1);
+      this.$router.push({ name: 'Inventory-Management' });
     },
   },
 };
@@ -32,62 +43,38 @@ export default {
 
 <template>
   <header-content></header-content>
-  <div class="inventory-details">
-    <h1>Inventory Item Details</h1>
-
-    <div v-if="item" class="card">
-      <div class="card-content">
-        <h2>{{ item.name }}</h2>
-        <p><strong>Quantity:</strong> {{ item.quantity }}</p>
-        <p><strong>Unit:</strong> {{ item.unit }}</p>
-        <p><strong>Supplier:</strong> {{ item.supplier }}</p>
-        <p><strong>Cost Per Unit:</strong> {{ item.costPerUnit }}</p>
-        <p><strong>Expiration Date:</strong> {{ formatDate(item.expiration) }}</p>
-        <p><strong>Last Updated:</strong> {{ formatDate(item.lastUpdated) }}</p>
-        <p><strong>Type:</strong> {{ item.type }}</p>
-      </div>
-      <button @click="goBack" class="back-button">Back</button>
-    </div>
-
-    <div v-else>No item details available.</div>
+  <div class="p-4">
+    <pv-card>
+      <template #title>
+        <h2 class="text-2xl font-bold">Inventory Details</h2>
+      </template>
+      <template #content>
+        <pv-skeleton v-if="loading" width="100%" height="150px" />
+        <div v-else-if="error">
+          <pv-message severity="error" :closable="false">Failed to load inventory item.</pv-message>
+        </div>
+        <div v-else>
+          <div class="p-grid">
+            <div class="p-col-12 p-md-6"><strong>Name:</strong> {{ item.name }}</div>
+            <div class="p-col-12 p-md-6"><strong>Quantity:</strong> {{ item.quantity }}</div>
+            <div class="p-col-12 p-md-6"><strong>Unit:</strong> {{ item.unit }}</div>
+            <div class="p-col-12 p-md-6"><strong>Supplier:</strong> {{ item.supplier }}</div>
+            <div class="p-col-12 p-md-6"><strong>Cost Per Unit:</strong> {{ item.costPerUnit }}</div>
+            <div class="p-col-12 p-md-6"><strong>Expiration:</strong> {{ item.expiration }}</div>
+            <div class="p-col-12 p-md-6"><strong>Last Updated:</strong> {{ item.lastUpdated }}</div>
+            <div class="p-col-12 p-md-6"><strong>Type:</strong> {{ item.type }}</div>
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <pv-button label="Back" icon="pi pi-arrow-left" @click="goBack" class="p-button-secondary" />
+      </template>
+    </pv-card>
   </div>
 </template>
 
 <style scoped>
-h1{
-padding-bottom: 20px;
+.p-grid > div {
+  margin-bottom: 0.75rem;
 }
-p,h2{
-  color: white;
-}
-.inventory-details {
-  padding: 20px;
-}
-
-.card {
-  background: #8B0000;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 25px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.card-content h2 {
-  margin-top: 0;
-}
-
-.back-button {
-  margin-top: 20px;
-  padding: 10px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.back-button:hover {
-  background-color: #0056b3;
-}
-
 </style>

@@ -42,6 +42,9 @@ import TabList from "primevue/tablist";
 import Tab from "primevue/tab";
 import TabPanel from "primevue/tabpanel";
 import Dropdown from "primevue/dropdown";
+import Calendar from "primevue/calendar";
+import skeleton from "primevue/skeleton";
+import message from "primevue/message";
 
 
 import Toast from "primevue/toast";
@@ -114,6 +117,9 @@ app.component('pv-button', Button)
     .component('pv-tab-panel', TabPanel)
     .component('pv-data-view', DataView)
     .component('pv-dropdown', Dropdown)
-    .component('pv-panel', Panel);
+    .component('pv-panel', Panel)
+    .component('pv-calendar', Calendar)
+    .component('pv-skeleton', skeleton)
+    .component('pv-message', message);
 
 app.mount('#app')

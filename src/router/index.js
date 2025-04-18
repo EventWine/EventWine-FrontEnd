@@ -6,26 +6,27 @@ import BottlingManagementComponent from "../elixir-control/winemaking-process/pa
 import ClarificationManagementComponent from "../elixir-control/winemaking-process/pages/clarification-management.component.vue";
 import PressingManagementComponent from "../elixir-control/winemaking-process/pages/pressing-management.component.vue";
 import WinemakingProcessManagementComponent from "../elixir-control/winemaking-process/pages/winemaking-process-management.component.vue";
-import ProductManagementComponent from "../elixir-control/products-mangment/pages/product-management.component.vue";
 import InventoryManagementComponent from "../elixir-control/inventory-management/pages/inventory-management.vue";
 import InventoryDetailComponent from "../elixir-control/inventory-management/pages/inventory-details.vue";
-import OrderHistory from "../elixir-control/distributor-profile/pages/order-history.vue";
+import ProducerHomeComponent from "../public/pages/producer-home.component.vue";
 import HomeContentComponent from "../public/pages/home-content.component.vue";
-import ClientManagementComponent from "../elixir-control/customer-management/pages/client-management.component.vue";
-import ClientDetailsComponent from "../elixir-control/customer-management/pages/client-details.component.vue";
 import SignInComponent from "../iam/pages/sign-in.component.vue";
 import SignUpComponent from "../iam/pages/sign-up.component.vue";
-import OrderManagement from "../elixir-control/order-management/pages/order-management.vue";
-import OrderDetails from "../elixir-control/order-management/pages/order-details.vue";
+import InventoryDetails from "../elixir-control/inventory-management/pages/inventory-details.vue";
+import PageNotFoundComponent from "../public/pages/page-not-found.component.vue";
+
 import {authenticationGuard} from "../iam/services/authentication.guard.js";
 
 const router = createRouter({
     history: createWebHistory(),
     routes: [
 
-        {path: '/:pathMatch(.*)*', redirect: '/home'},
-        {path: '/', name: 'Home', component: HomeContentComponent, meta: { title: 'Home'}},
-        {path: '/home', name: 'Home', component: HomeContentComponent, meta: { title: 'Home'}},
+        /*=========================== Public Routes ===========================*/
+        { path: '/home',             name: 'Home',      component: HomeContentComponent,     meta: { title: 'Home' } },
+        { path: '/home/sign-in',     name: 'sign-in',   component: SignInComponent,          meta: { title: 'Sign In' } },
+        { path: '/home/sign-up',     name: 'sign-up',   component: SignUpComponent,          meta: { title: 'Sign Up' } },
+        { path: '/notfound',         name: 'notfound',  component: PageNotFoundComponent,    meta: { title: 'Página no encontrada' } },
+        { path: '/:pathMatch(.*)*',  redirect: '/notfound' },
 
 
         /*=========================== Winemaking Process Routes ===========================*/
@@ -39,32 +40,21 @@ const router = createRouter({
 
         /*=========================== Inventory Management Routes ===========================*/
         {path: '/vinicultor/inventory',                        name: 'Inventory-Management',component: InventoryManagementComponent,        meta: { title: 'Inventory Management' }},
-        {path: '/vinicultor/inventory/:id',                    name: 'InventoryDetail',     component: InventoryDetailComponent,            meta: { title: 'Inventory Item Details' }},
 
-        /*=========================== Customer Management Routes ===========================*/
-        {path:'/vinicultor/clients',             name: 'Clients', component: ClientManagementComponent, meta: { title: 'Clients'}},
-        {path:'/vinicultor/clients/details/:id', name: 'ClientDetails', component: ClientDetailsComponent, meta: { title: 'Client Details'}, props: true},
-
-        /*=========================== Distributor Profile Routes ===========================*/
-        {path: '/vinicultor/orders/history', name: 'OrderHistory',        component: OrderHistory,                        meta: { title: 'Order History' }},
-        {path: '/vinicultor/products',       name: 'Products',            component: ProductManagementComponent,          meta: { title: 'Products'}},
-
-        /*=========================== Order Management Routes ===========================*/
-        {path: '/productor/myorders',        name: 'MyOrder',             component: OrderManagement,                     meta: { title: 'My Orders' }},
-        {path: '/productor/orderdetails/:id',       name: 'OrderDetails',            component: OrderDetails,          meta: { title: 'Order Details'}},
-
-        /*=========================== IAM ===========================*/
-        //{ path: '/distributor/order-requests', name: 'OrderRequests', component: OrderRequestsCreated, meta: {' +
-        // ' title: 'Order Requests' } },
-
-        //{ path: '/distributor/login', name: 'Navigator', component: navbarElixirControlComponent, meta: { title:
-        // 'Navigator' } },
-        /*=========================== IAM ===========================*/
-
+        {
+            path: '/vinicultor/inventory/:id/details',
+            name: 'InventoryDetails',
+            component: InventoryDetails,
+            props: true,
+            meta: { title: 'Inventory Item Details' }
+        },
 
         { path: '/home/sign-in',                 name: 'sign-in',    component: SignInComponent,             meta: { title: 'Sign In'}},
-        { path: '/home/sign-up',                 name: 'sign-up',    component: SignUpComponent,             meta: { title: 'Sign Up'}}
+        { path: '/home/sign-up',                 name: 'sign-up',    component: SignUpComponent,             meta: { title: 'Sign Up'}},
 
+        /*=========================== Producer Home Routes ===========================*/
+
+        {path: '/vinicultor/home', name: 'Producer-Home', component: ProducerHomeComponent, meta: { title: 'Producer Home'}}
 
     ]
 });

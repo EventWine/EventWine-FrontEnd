@@ -49,7 +49,7 @@ export default {
         <div class="field mt-5">
           <pv-float-label>
             <label for="role">Role</label>
-            <pv-dropdown id="role" v-model="role" :options="['Winemaker', 'Distributor']"/>
+            <pv-dropdown id="role" v-model="role" :options="['Winemaker']"/>
             <small v-if="!role" class="p-invalid">Role is required.</small>
           </pv-float-label>
         <div class="p-field mt-5">

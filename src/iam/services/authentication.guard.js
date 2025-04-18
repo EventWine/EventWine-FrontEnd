@@ -9,7 +9,7 @@ import {useAuthenticationStore} from "./authentication.store.js";
  */
 export const authenticationGuard = (to, from, next) => {
     const authenticationStore = useAuthenticationStore();
-    const isAnonymous = !authenticationStore.isSignedIn;
+    const isAnonymous = !authenticationStore.isSignedIn && !localStorage.getItem('token');
     const publicRoutes = ['/home/sign-in', '/home/sign-up', '/page-not-found', '/home'];
     const routeRequiresToBeAuthenticated = !publicRoutes.includes(to.path);
     if (isAnonymous && routeRequiresToBeAuthenticated) return next({name: 'sign-in'});

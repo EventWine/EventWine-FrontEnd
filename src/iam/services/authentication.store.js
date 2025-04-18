@@ -11,7 +11,12 @@ const authenticationService = new AuthenticationService();
  */
 export const useAuthenticationStore = defineStore({
     id: 'authentication',
-    state: () => ({ signedIn: false, userId: 0, username: ''}),
+    state: () => ({
+        signedIn: !!localStorage.getItem('token'),
+        userId: Number(localStorage.getItem('userId')) || 0,
+        username: localStorage.getItem('username') || '',
+        role: Number(localStorage.getItem('role')) || 0
+    }),
     getters: {
         /**
          * Is signed in
@@ -55,13 +60,18 @@ export const useAuthenticationStore = defineStore({
                     this.userId = signInResponse.id;
                     this.username = signInResponse.username;
                     this.role = signInResponse.role;
+
+
                     localStorage.setItem('token', signInResponse.token);
+                    localStorage.setItem('userId', signInResponse.id);
+                    localStorage.setItem('username', signInResponse.username);
+                    localStorage.setItem('role', signInResponse.role);
+
                     console.log(signInResponse);
-                    //si role es igual a 1 que se se diriga a Navigator y si es igual a 2 que se diriga a OrderRequests
                     if(signInResponse.role === 1) {
-                        router.push({name: 'Inventory-Management'});
+                        router.push({name: 'Home'});
                     } else {
-                        router.push({name: 'Inventory-Management'});
+                        router.push({name: 'Producer-Home'});
                         //router.push({name: 'OrderRequests'});
                     }
                 })
@@ -100,7 +110,14 @@ export const useAuthenticationStore = defineStore({
             this.signedIn = false;
             this.userId = 0;
             this.username = '';
+            this.role = 0;
+
+            // Limpiar localStorage
             localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('role');
+
             router.push({name: 'sign-in'});
         }
     }

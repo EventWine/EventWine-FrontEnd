@@ -1,13 +1,13 @@
 <script>
-import {Bottling} from "../model/bottling.entity.js";
+import { Bottling } from "../model/bottling.entity.js";
 import DataManager from "../../../shared/components/data-manager.component.vue";
 import BottlingCreateAndEdit from "../components/bottling-create-and-edit.component.vue";
-
 import WinemakingProcessManagement from "./winemaking-process-management.component.vue";
+import { BottlingApiService } from "../services/bottling-api.service.js"; // ✅ Import corregido
 
 export default {
   name: "bottling-management",
-  components: {WinemakingProcessManagement, BottlingCreateAndEdit, DataManager},
+  components: { WinemakingProcessManagement, BottlingCreateAndEdit, DataManager },
 
   data() {
     return {
@@ -77,73 +77,64 @@ export default {
       this.createAndEditDialogIsVisible = false;
       this.isEdit = false;
     },
-
     //#endregion
 
     //#region Action Methods
-
     createBottling() {
-      this.bottlingApiService.create(this.bottling.id, this.bottling).then(response => {
-          let newBottling = new Bottling(response.data);
-          this.bottlingArray.push(newBottling);
-          this.notifySuccessfulAction('Bottling created successfully');
-        })
-        .catch(error => {
-          console.error(" Error creating bottling data  ", error);
-        });
+      this.bottlingApiService.create(this.bottling.batchId, this.bottling).then(response => {
+        let newBottling = new Bottling(response.data);
+        this.bottlingArray.push(newBottling);
+        this.notifySuccessfulAction('Bottling created successfully');
+      })
+          .catch(error => {
+            console.error("Error creating bottling data", error);
+          });
     },
 
     updateBottling() {
-      this.bottlingApiService.update(this.bottling.id, this.bottling).then(response => {
-          let index = this.findIndexById(this.bottling.id);
-          this.bottlingArray[index] = new Bottling(response.data);
-          this.notifySuccessfulAction('Bottling updated successfully');
-        })
-        .catch(error => {
-          console.error(" Error updating bottling data  ", error);
-        });
+      this.bottlingApiService.update(this.bottling.batchId, this.bottling).then(response => {
+        let index = this.findIndexById(this.bottling.id);
+        this.bottlingArray[index] = new Bottling(response.data);
+        this.notifySuccessfulAction('Bottling updated successfully');
+      })
+          .catch(error => {
+            console.error("Error updating bottling data", error);
+          });
     },
 
     deleteBottling() {
-      this.bottlingApiService.delete(this.bottling.id).then(() => {
-          let index = this.findIndexById(this.bottling.id);
-          this.bottlingArray.splice(index, 1);
-          this.notifySuccessfulAction('Bottling deleted successfully');
-        })
-        .catch(error => {
-          console.error(" Error deleting bottling data  ", error);
-        });
+      this.bottlingApiService.delete(this.bottling.batchId).then(() => {
+        let index = this.findIndexById(this.bottling.id);
+        this.bottlingArray.splice(index, 1);
+        this.notifySuccessfulAction('Bottling deleted successfully');
+      })
+          .catch(error => {
+            console.error("Error deleting bottling data", error);
+          });
     },
 
     deleteSelectedBottling() {
       this.selectedBottling.forEach(bottling => {
-        this.bottlingApiService.delete(bottling.id).then(() => {
-            this.bottlingArray = this.bottlingArray.filter(b => b.id !== bottling.id);
-            this.notifySuccessfulAction('Bottling deleted successfully');
-          })
-          .catch(error => {
-            console.error(" Error deleting bottling data  ", error);
-          });
+        this.bottlingApiService.delete(bottling.batchId).then(() => {
+          this.bottlingArray = this.bottlingArray.filter(b => b.id !== bottling.id);
+          this.notifySuccessfulAction('Bottling deleted successfully');
+        })
+            .catch(error => {
+              console.error("Error deleting bottling data", error);
+            });
       });
     },
-    //#endregion
-
 
     getAllBottling() {
-
-      this.bottlingApiService.getAllResources().then(response => {
-        this.bottlingArray = response.data.map(newBottling => new Bottling(newBottling));
-      }).catch(error => {
-        console.error(" Error fetching bottling data  ", error);
-      });
-    },
-
+      // No endpoint definido para getAll, puedes quitar esta función o adaptarla según tu backend
+      console.warn("getAllBottling is not implemented in BottlingApiService");
+    }
+    //#endregion
   },
 
   //#region Lifecycle Hooks
   created() {
-    this.bottlingApiService = new winemakingProcessApiService("/bottling");
-
+    this.bottlingApiService = new BottlingApiService(); // ✅ Corrección aquí
     this.getAllBottling();
     console.log('Bottling Management component created');
   }
@@ -151,39 +142,37 @@ export default {
 </script>
 
 <template>
-
   <winemaking-process-management></winemaking-process-management>
 
   <div class="w-full">
-    <data-manager :title="title"
-                  v-bind:items="bottlingArray"
-                  v-on:new-item-requested-manager="onNewItem"
-                  v-on:edit-item-requested-manager="onEditItem($event)"
-                  v-on:delete-item-requested-manager="onDeleteItem($event)"
-                  v-on:delete-selected-items-requested-manager="onDeleteSelectedItems($event)">
-
+    <data-manager
+        :title="title"
+        v-bind:items="bottlingArray"
+        v-on:new-item-requested-manager="onNewItem"
+        v-on:edit-item-requested-manager="onEditItem($event)"
+        v-on:delete-item-requested-manager="onDeleteItem($event)"
+        v-on:delete-selected-items-requested-manager="onDeleteSelectedItems($event)"
+    >
       <template #custom-columns-manager>
-        <pv-column :sortable="true" field="id"           header="Id" style="min-width: 6rem"/>
-        <pv-column :sortable="true" field="batch_id"     header="Batch Id" style="min-width: 6rem"/>
-        <pv-column :sortable="true" field="bottling_date" header="Bottling Date" style="min-width: 6rem"/>
-        <pv-column :sortable="true" field="bottle_size_ml" header="Bottle Size (ml)" style="min-width: 6rem"/>
-        <pv-column :sortable="true" field="number_of_bottles" header="Number of Bottles" style="min-width: 6rem"/>
-        <pv-column :sortable="true" field="label_type"    header="Label Type" style="min-width: 6rem"/>
-        <pv-column :sortable="true" field="cork_type"     header="Cork Type" style="min-width: 6rem"/>
+        <pv-column :sortable="true" field="id" header="Id" style="min-width: 6rem"/>
+        <pv-column :sortable="true" field="batchId" header="Batch Id" style="min-width: 6rem"/>
+        <pv-column :sortable="true" field="bottlingDate" header="Bottling Date" style="min-width: 6rem"/>
+        <pv-column :sortable="true" field="bottleSizeMl" header="Bottle Size (ml)" style="min-width: 6rem"/>
+        <pv-column :sortable="true" field="numberOfBottles" header="Number of Bottles" style="min-width: 6rem"/>
+        <pv-column :sortable="true" field="labelType" header="Label Type" style="min-width: 6rem"/>
+        <pv-column :sortable="true" field="corkType" header="Cork Type" style="min-width: 6rem"/>
       </template>
     </data-manager>
 
-    <bottling-create-and-edit :visible="createAndEditDialogIsVisible"
-                              :edit="isEdit"
-                              :item="bottling"
-                              v-on:cancel-requested-bottling="onCancelRequestedManagement"
-                              v-on:save-requested-bottling="onSaveRequestedManagement($event)">
-    </bottling-create-and-edit>
+    <bottling-create-and-edit
+        :visible="createAndEditDialogIsVisible"
+        :edit="isEdit"
+        :item="bottling"
+        v-on:cancel-requested-bottling="onCancelRequestedManagement"
+        v-on:save-requested-bottling="onSaveRequestedManagement($event)"
+    />
   </div>
-
-
 </template>
 
 <style scoped>
-
 </style>

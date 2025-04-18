@@ -1,19 +1,9 @@
 <script>
-import InventoryProcessApiService from "../services/inventory-process-api.service.js";
+import { InventoryItem } from "../model/inventory.entity.js";
+import { InventoryProcessApiService } from "../services/inventory-process-api.service.js";
 
-import  Button  from 'primevue/button';
-import  Calendar  from 'primevue/calendar';
-import  InputText  from 'primevue/inputtext';
-import  InputNumber  from 'primevue/inputnumber';
-import  Dialog  from 'primevue/dialog';
 export default {
-  components: {
-    'pv-dialog': Dialog,
-    'pv-input-text': InputText,
-    'pv-input-number': InputNumber,
-    'pv-calendar': Calendar,
-    'pv-button': Button,
-  },
+  name: 'InventoryCreateAndEdit',
   props: {
     visible: {
       type: Boolean,
@@ -21,42 +11,49 @@ export default {
     },
     entity: {
       type: Object,
-      default: () => ({}),
+      default: () => new InventoryItem({}),
     },
     edit: {
       type: Boolean,
-      default: false,
+      required: true,
     },
   },
   data() {
     return {
-      inventoryItem: {...this.entity},
+      item: new InventoryItem({}),
+      inventoryService: new InventoryProcessApiService(),
     };
   },
   watch: {
     entity: {
-      handler(newValue) {
-        this.inventoryItem = {...newValue};
+      immediate: true,
+      handler(newVal) {
+        this.item = new InventoryItem(newVal || {});
       },
-      deep: true,
+    },
+    visible(newVal) {
+      if (newVal) {
+        this.item = new InventoryItem(this.entity || {});
+      }
     },
   },
   methods: {
     closeDialog() {
+      this.$emit('update:visible', false);
       this.$emit('canceled');
     },
     async saveItem() {
       try {
-        console.log("Saving item:", this.inventoryItem);
-        if (this.edit) {
-          await InventoryProcessApiService.update(this.inventoryItem.id, this.inventoryItem);
+        if (this.edit && this.item.id) {
+          await this.inventoryService.update(this.item.id, this.item);
         } else {
-          await InventoryProcessApiService.create(this.inventoryItem);
+          const response = await this.inventoryService.create(this.item);
+          this.$emit('item-created', response.data);
         }
         this.$emit('saved');
         this.closeDialog();
       } catch (error) {
-        console.error("Error saving item:", error);
+        console.error("Error saving inventory item:", error);
       }
     },
   },
@@ -64,69 +61,66 @@ export default {
 </script>
 
 <template>
-  <div>
-    <pv-dialog :visible="visible" @hide="closeDialog" :header="edit ? 'Edit Inventory Item' : 'Add New Inventory Item'">
-      <div class="form-group">
-        <label for="name">Name:</label>
-        <pv-input-text id="name" v-model="inventoryItem.name" required/>
-      </div>
+  <pv-dialog :visible="visible" @update:visible="closeDialog" :header="edit ? 'Edit Item' : 'Create Item'">
+    <div class="form-group">
+      <label for="name">Name:</label>
+      <pv-input-text id="name" v-model="item.name" required />
+    </div>
 
-      <div class="form-group">
-        <label for="quantity">Quantity:</label>
-        <pv-input-number id="quantity" v-model="inventoryItem.quantity" required/>
-      </div>
+    <div class="form-group">
+      <label for="quantity">Quantity:</label>
+      <pv-input-number id="quantity" v-model="item.quantity" required />
+    </div>
 
-      <div class="form-group">
-        <label for="unit">Unit:</label>
-        <pv-input-text id="unit" v-model="inventoryItem.unit" placeholder="Enter unit (e.g., Kg, Units)" required/>
-      </div>
+    <div class="form-group">
+      <label for="unit">Unit:</label>
+      <pv-input-text id="unit" v-model="item.unit" required />
+    </div>
 
-      <div class="form-group">
-        <label for="supplier">Supplier:</label>
-        <pv-input-text id="supplier" v-model="inventoryItem.supplier" required/>
-      </div>
+    <div class="form-group">
+      <label for="supplier">Supplier:</label>
+      <pv-input-text id="supplier" v-model="item.supplier" required />
+    </div>
 
-      <div class="form-group">
-        <label for="costPerUnit">Cost Per Unit:</label>
-        <pv-input-number id="costPerUnit" v-model="inventoryItem.costPerUnit" required/>
-      </div>
+    <div class="form-group">
+      <label for="costPerUnit">Cost Per Unit:</label>
+      <pv-input-number id="costPerUnit" v-model="item.costPerUnit" required />
+    </div>
 
-      <div class="form-group">
-        <label for="expiration">Expiration Date:</label>
-        <pv-calendar id="expiration" v-model="inventoryItem.expiration" dateFormat="mm/dd/yy" required/>
-      </div>
+    <div class="form-group">
+      <label for="expiration">Expiration Date:</label>
+      <pv-calendar id="expiration" v-model="item.expiration" dateFormat="mm/dd/yy" />
+    </div>
 
-      <div class="form-group">
-        <label for="lastUpdated">Last Updated:</label>
-        <pv-calendar id="lastUpdated" v-model="inventoryItem.lastUpdated" dateFormat="mm/dd/yy" required/>
-      </div>
+    <div class="form-group">
+      <label for="lastUpdated">Last Updated:</label>
+      <pv-calendar id="lastUpdated" v-model="item.lastUpdated" dateFormat="mm/dd/yy" />
+    </div>
 
-      <div class="form-group">
-        <label for="type">Type:</label>
-        <select class="button-type" id="type" v-model="inventoryItem.type" required>
-          <option value="">Select Type</option>
-          <option value="Raw Material">Raw Material</option>
-          <option value="Equipment">Equipment</option>
-          <option value="Consumable">Consumable</option>
-        </select>
-      </div>
+    <div class="form-group">
+      <label for="type">Type:</label>
+      <select class="button-type" id="type" v-model="item.type" required>
+        <option value="">Select Type</option>
+        <option value="Raw Material">Raw Material</option>
+        <option value="Equipment">Equipment</option>
+        <option value="Consumable">Consumable</option>
+      </select>
+    </div>
 
-      <template #footer>
-        <pv-button label="Cancel" @click="closeDialog"/>
-        <pv-button label="Save" severity="success" @click="saveItem"/>
-      </template>
-    </pv-dialog>
-  </div>
+    <template #footer>
+      <pv-button label="Cancel" @click="closeDialog" />
+      <pv-button label="Save" severity="success" @click="saveItem" />
+    </template>
+  </pv-dialog>
 </template>
 
 <style scoped>
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 1rem;
 }
-.button-type{
-  border: 1px solid #ccc;
+.button-type {
+  width: 100%;
+  padding: 0.5rem;
   border-radius: 4px;
-  font-size: 1em;
-  padding: 5px;
 }
 </style>

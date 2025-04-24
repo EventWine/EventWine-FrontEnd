@@ -51,13 +51,13 @@ export default {
 
 .title {
   font-size: 2.5rem;
-  color: #ffffff; /* blanco para fondo gris */
+  color: #8B0000; /* blanco para fondo gris */
   margin-bottom: 1rem;
 }
 
 .subtitle {
   font-size: 1.2rem;
-  color: #dddddd; /* gris claro */
+  color: #8B0000; /* gris claro */
   margin-bottom: 2rem;
 }
 

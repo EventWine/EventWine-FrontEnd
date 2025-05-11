@@ -7,8 +7,8 @@ export default {
 
   props: {
     item: null,
-  visible: Boolean
-},
+    visible: Boolean
+  },
 
   data() {
     return {
@@ -31,8 +31,6 @@ export default {
   created() {
     console.log('Bottling Create and Edit Dialog component created');
   }
-
-
 }
 </script>
 
@@ -45,28 +43,33 @@ export default {
       <template #content>
 
         <pv-float-label class="mt-5">
-          <label for="bottling_date">Bottling date </label>
-          <pv-input-text id="bottling_date" v-model="item.bottling_date" :class="{ 'p-invalid': submitted && !item.bottling_date}"/>
+          <label for="batch_id">Batch ID</label>
+          <pv-input-text id="batch_id" v-model="item.batchId" :class="{ 'p-invalid': submitted && !item.batchId}"/>
+        </pv-float-label>
+
+        <pv-float-label class="mt-5">
+          <label for="bottling_date">Bottling date</label>
+          <pv-input-text id="bottling_date" v-model="item.bottlingDate" :class="{ 'p-invalid': submitted && !item.bottlingDate}"/>
         </pv-float-label>
 
         <pv-float-label class="mt-5">
           <label for="bottle_size_ml">Bottle size (ml)</label>
-          <pv-input-text id="bottle_size_ml" v-model="item.bottle_size_ml" :class="{ 'p-invalid': submitted && !item.bottle_size_ml}"/>
+          <pv-input-text id="bottle_size_ml" v-model="item.bottleSizeMl" :class="{ 'p-invalid': submitted && !item.bottleSizeMl}"/>
         </pv-float-label>
 
         <pv-float-label class="mt-5">
           <label for="number_of_bottles">Number of bottles</label>
-          <pv-input-text id="number_of_bottles" v-model="item.number_of_bottles" :class="{ 'p-invalid': submitted && !item.number_of_bottles}"/>
+          <pv-input-text id="number_of_bottles" v-model="item.numberOfBottles" :class="{ 'p-invalid': submitted && !item.numberOfBottles}"/>
         </pv-float-label>
 
         <pv-float-label class="mt-5">
           <label for="label_type">Label type</label>
-          <pv-input-text id="label_type" v-model="item.label_type" :class="{ 'p-invalid': submitted && !item.label_type}"/>
+          <pv-input-text id="label_type" v-model="item.labelType" :class="{ 'p-invalid': submitted && !item.labelType}"/>
         </pv-float-label>
 
         <pv-float-label class="mt-5">
           <label for="cork_type">Cork type</label>
-          <pv-input-text id="cork_type" v-model="item.cork_type" :class="{ 'p-invalid': submitted && !item.cork_type}"/>
+          <pv-input-text id="cork_type" v-model="item.corkType" :class="{ 'p-invalid': submitted && !item.corkType}"/>
         </pv-float-label>
 
       </template>
